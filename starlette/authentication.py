@@ -28,7 +28,7 @@ def requires(
             if parameter.name == "request":
                 break
         else:
-            raise Exception(f'No "request" argument on function "{func}"')
+            raise Exception('No "request" argument on function "%s"' % func)
 
         if asyncio.iscoroutinefunction(func):
 

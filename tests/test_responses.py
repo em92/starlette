@@ -255,7 +255,7 @@ def test_template_response():
                 self.name = name
 
             def render(self, context):
-                return f"username: {context['username']}"
+                return "username: %s" % context["username"]
 
         async def asgi(receive, send):
             template = Template("index.html")

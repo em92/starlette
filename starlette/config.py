@@ -23,14 +23,16 @@ class Environ(MutableMapping):
     def __setitem__(self, key: typing.Any, value: typing.Any) -> None:
         if key in self._has_been_read:
             raise EnvironError(
-                f"Attempting to set environ['{key}'], but the value has already be read."
+                "Attempting to set environ['%s'], but the value has already be read."
+                % key
             )
         self._environ.__setitem__(key, value)
 
     def __delitem__(self, key: typing.Any) -> None:
         if key in self._has_been_read:
             raise EnvironError(
-                f"Attempting to delete environ['{key}'], but the value has already be read."
+                "Attempting to delete environ['%s'], but the value has already be read."
+                % key
             )
         self._environ.__delitem__(key)
 
@@ -69,7 +71,7 @@ class Config:
             return self._perform_cast(key, value, cast)
         if default is not undefined:
             return self._perform_cast(key, default, cast)
-        raise KeyError(f"Config '{key}' is missing, and has no default.")
+        raise KeyError("Config '%s' is missing, and has no default." % key)
 
     def _read_file(self, file_name: str) -> typing.Dict[str, str]:
         file_values = {}  # type: typing.Dict[str, str]
@@ -93,12 +95,13 @@ class Config:
             value = value.lower()
             if value not in mapping:
                 raise ValueError(
-                    f"Config '{key}' has value '{value}'. Not a valid bool."
+                    "Config '%s' has value '%s'. Not a valid bool." % (key, value)
                 )
             return mapping[value]
         try:
             return cast(value)
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                f"Config '{key}' has value '{value}'. Not a valid {cast.__name__}."
+                "Config '%s' has value '%s'. Not a valid %s."
+                % (key, value, cast.__name__)
             )
