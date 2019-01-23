@@ -285,11 +285,11 @@ class FileResponse(Response):
                 stat_result = await aio_stat(self.path)
                 self.set_stat_headers(stat_result)
             except FileNotFoundError:
-                raise RuntimeError(f"File at path {self.path} does not exist.")
+                raise RuntimeError("File at path {0} does not exist.".format(self.path))
             else:
                 mode = stat_result.st_mode
                 if not stat.S_ISREG(mode):
-                    raise RuntimeError(f"File at path {self.path} is not a file.")
+                    raise RuntimeError("File at path {0} is not a file.".format(self.path))
         await send(
             {
                 "type": "http.response.start",

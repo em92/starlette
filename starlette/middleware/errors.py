@@ -140,7 +140,7 @@ class ServerErrorMiddleware:
         exc_html = "".join(
             self.genenrate_frame_html(frame) for frame in traceback_obj.stack
         )
-        error = f"{traceback_obj.exc_type.__name__}: {traceback_obj}"
+        error = "{0}: {1}".format(traceback_obj.exc_type.__name__, traceback_obj)
 
         return TEMPLATE.format(styles=STYLES, error=error, exc_html=exc_html)
 

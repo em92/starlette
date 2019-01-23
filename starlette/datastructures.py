@@ -385,7 +385,8 @@ class FormData(typing.Mapping[str, FormValue]):
 
     def __repr__(self) -> str:
         items = self.multi_items()
-        return f"{self.__class__.__name__}(items={repr(items)})"
+        return "{0}(items={1})".format(self.__class__.__name__, repr(items))
+
 
 
 class Headers(typing.Mapping[str, str]):

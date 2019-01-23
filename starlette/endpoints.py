@@ -97,7 +97,7 @@ class WebSocketEndpoint:
 
         assert (
             self.encoding is None
-        ), f"Unsupported 'encoding' attribute {self.encoding}"
+        ), "Unsupported 'encoding' attribute {0}".format(self.encoding)
         return message["text"] if "text" in message else message["bytes"]
 
     async def on_connect(self, websocket: WebSocket) -> None:

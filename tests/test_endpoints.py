@@ -11,7 +11,7 @@ class Homepage(HTTPEndpoint):
         username = request.path_params.get("username")
         if username is None:
             return PlainTextResponse("Hello, world!")
-        return PlainTextResponse(f"Hello, {username}!")
+        return PlainTextResponse("Hello, {0}!".format(username))
 
 
 app = Router(
@@ -91,7 +91,7 @@ def test_websocket_endpoint_on_receive_text():
         encoding = "text"
 
         async def on_receive(self, websocket, data):
-            await websocket.send_text(f"Message text was: {data}")
+            await websocket.send_text("Message text was: {0}".format(data))
 
     client = TestClient(WebSocketApp)
     with client.websocket_connect("/ws") as websocket:
@@ -109,7 +109,7 @@ def test_websocket_endpoint_on_default():
         encoding = None
 
         async def on_receive(self, websocket, data):
-            await websocket.send_text(f"Message text was: {data}")
+            await websocket.send_text("Message text was: {0}".format(data))
 
     client = TestClient(WebSocketApp)
     with client.websocket_connect("/ws") as websocket:
