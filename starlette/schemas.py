@@ -20,12 +20,11 @@ class OpenAPIResponse(Response):
         ), "The schema passed to OpenAPIResponse should be a dictionary."
         return yaml.dump(content, default_flow_style=False).encode("utf-8")
 
-
-class EndpointInfo(typing.NamedTuple):
-    path: str
-    http_method: str
-    func: typing.Callable
-
+EndpointInfo = typing.NamedTuple('EndpointInfo', [
+    ('path', str),
+    ('http_method', str),
+    ('func', typing.Callable),
+])
 
 class BaseSchemaGenerator:
     def get_schema(self, routes: typing.List[BaseRoute]) -> dict:
@@ -44,7 +43,7 @@ class BaseSchemaGenerator:
         - func
             method ready to extract the docstring
         """
-        endpoints_info: list = []
+        endpoints_info = []
 
         for route in routes:
             if not isinstance(route, Route) or not route.include_in_schema:
