@@ -6,6 +6,8 @@ from starlette.requests import Request
 from starlette.responses import StreamingResponse
 from starlette.types import ASGIApp, ASGIInstance, Receive, Scope, Send
 
+from async_generator import async_generator, yield_
+
 RequestResponseEndpoint = typing.Callable[[Request], typing.Awaitable[ASGIInstance]]
 DispatchFunction = typing.Callable[
     [Request, RequestResponseEndpoint], typing.Awaitable[ASGIInstance]
@@ -45,13 +47,14 @@ class BaseHTTPMiddleware:
             raise RuntimeError("No response returned.")
         assert message["type"] == "http.response.start"
 
-        async def body_stream() -> typing.AsyncGenerator[bytes, None]:
+        @async_generator
+        async def body_stream():
             while True:
                 message = await queue.get()
                 if message is None:
                     break
                 assert message["type"] == "http.response.body"
-                yield message["body"]
+                await yield_(message["body"])
             task.result()
 
         response = StreamingResponse(

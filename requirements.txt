@@ -24,3 +24,6 @@ psycopg2-binary
 # Documentation
 mkdocs
 mkdocs-material
+
+# Python 3.5 porting
+async_generator

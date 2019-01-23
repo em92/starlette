@@ -16,6 +16,8 @@ from starlette.responses import (
 )
 from starlette.testclient import TestClient
 
+from async_generator import async_generator, yield_
+
 
 def test_text_response():
     def app(scope):
@@ -77,11 +79,12 @@ def test_streaming_response():
     filled_by_bg_task = ""
 
     def app(scope):
+        @async_generator
         async def numbers(minimum, maximum):
             for i in range(minimum, maximum + 1):
-                yield str(i)
+                await yield_(str(i))
                 if i != maximum:
-                    yield ", "
+                    await yield_(", ")
                 await asyncio.sleep(0)
 
         async def numbers_for_cleanup(start=1, stop=5):
@@ -151,9 +154,9 @@ def test_file_response(tmpdir):
 
     async def numbers(minimum, maximum):
         for i in range(minimum, maximum + 1):
-            yield str(i)
+            await yield_(str(i))
             if i != maximum:
-                yield ", "
+                await yield_(", ")
             await asyncio.sleep(0)
 
     async def numbers_for_cleanup(start=1, stop=5):

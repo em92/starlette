@@ -33,7 +33,7 @@ class MultiPartMessage(Enum):
 
 class FormParser:
     def __init__(
-        self, headers: Headers, stream: typing.AsyncGenerator[bytes, None]
+        self, headers: Headers, stream
     ) -> None:
         assert (
             multipart is not None
@@ -107,7 +107,7 @@ class FormParser:
 
 class MultiPartParser:
     def __init__(
-        self, headers: Headers, stream: typing.AsyncGenerator[bytes, None]
+        self, headers: Headers, stream
     ) -> None:
         assert (
             multipart is not None

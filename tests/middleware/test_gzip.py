@@ -3,6 +3,7 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import PlainTextResponse, StreamingResponse
 from starlette.testclient import TestClient
 
+from async_generator import async_generator, yield_
 
 def test_gzip_responses():
     app = Starlette()
@@ -62,9 +63,10 @@ def test_gzip_streaming_response():
 
     @app.route("/")
     def homepage(request):
+        @async_generator
         async def generator(bytes, count):
             for index in range(count):
-                yield bytes
+                await yield_(bytes)
 
         streaming = generator(bytes=b"x" * 400, count=10)
         return StreamingResponse(streaming, status_code=200)

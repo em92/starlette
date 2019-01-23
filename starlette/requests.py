@@ -13,6 +13,7 @@ try:
 except ImportError:  # pragma: nocover
     parse_options_header = None  # type: ignore
 
+from async_generator import async_generator, yield_
 
 class ClientDisconnect(Exception):
     pass
@@ -131,10 +132,11 @@ class Request(HTTPConnection):
     def receive(self) -> Receive:
         return self._receive
 
-    async def stream(self) -> typing.AsyncGenerator[bytes, None]:
+    @async_generator
+    async def stream(self):
         if hasattr(self, "_body"):
-            yield self._body
-            yield b""
+            await yield_(self._body)
+            await yield_(b"")
             return
 
         if self._stream_consumed:
@@ -146,13 +148,13 @@ class Request(HTTPConnection):
             if message["type"] == "http.request":
                 body = message.get("body", b"")
                 if body:
-                    yield body
+                    await yield_(body)
                 if not message.get("more_body", False):
                     break
             elif message["type"] == "http.disconnect":
                 self._is_disconnected = True
                 raise ClientDisconnect()
-        yield b""
+        await yield_(b"")
 
     async def body(self) -> bytes:
         if not hasattr(self, "_body"):
