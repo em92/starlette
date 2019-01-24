@@ -167,7 +167,7 @@ class Request(HTTPConnection):
     async def json(self) -> typing.Any:
         if not hasattr(self, "_json"):
             body = await self.body()
-            self._json = json.loads(body)
+            self._json = json.loads(body.decode("utf-8"))
         return self._json
 
     async def form(self) -> FormData:
