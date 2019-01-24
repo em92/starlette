@@ -152,6 +152,7 @@ def test_file_response(tmpdir):
 
     filled_by_bg_task = ""
 
+    @async_generator
     async def numbers(minimum, maximum):
         for i in range(minimum, maximum + 1):
             await yield_(str(i))
