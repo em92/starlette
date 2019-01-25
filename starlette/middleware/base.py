@@ -2,11 +2,11 @@ import asyncio
 import functools
 import typing
 
+from async_generator import async_generator, yield_
+
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
 from starlette.types import ASGIApp, ASGIInstance, Receive, Scope, Send
-
-from async_generator import async_generator, yield_
 
 RequestResponseEndpoint = typing.Callable[[Request], typing.Awaitable[ASGIInstance]]
 DispatchFunction = typing.Callable[

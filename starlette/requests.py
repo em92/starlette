@@ -4,6 +4,8 @@ import json
 import typing
 from collections.abc import Mapping
 
+from async_generator import async_generator, yield_
+
 from starlette.datastructures import URL, Address, FormData, Headers, QueryParams
 from starlette.formparsers import FormParser, MultiPartParser
 from starlette.types import Message, Receive, Scope
@@ -12,8 +14,6 @@ try:
     from multipart.multipart import parse_options_header
 except ImportError:  # pragma: nocover
     parse_options_header = None  # type: ignore
-
-from async_generator import async_generator, yield_
 
 class ClientDisconnect(Exception):
     pass

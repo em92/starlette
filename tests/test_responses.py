@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import pytest
+from async_generator import async_generator, yield_
 
 from starlette import status
 from starlette.background import BackgroundTask
@@ -15,8 +16,6 @@ from starlette.responses import (
     UJSONResponse,
 )
 from starlette.testclient import TestClient
-
-from async_generator import async_generator, yield_
 
 
 def test_text_response():

@@ -1,9 +1,10 @@
+from async_generator import async_generator, yield_
+
 from starlette.applications import Starlette
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import PlainTextResponse, StreamingResponse
 from starlette.testclient import TestClient
 
-from async_generator import async_generator, yield_
 
 def test_gzip_responses():
     app = Starlette()
