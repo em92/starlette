@@ -32,7 +32,7 @@ class MultiPartMessage(Enum):
 
 
 class FormParser:
-    def __init__(
+    def __init__(  # type: ignore
         self, headers: Headers, stream
     ) -> None:
         assert (
@@ -106,7 +106,7 @@ class FormParser:
 
 
 class MultiPartParser:
-    def __init__(
+    def __init__(  # type: ignore
         self, headers: Headers, stream
     ) -> None:
         assert (

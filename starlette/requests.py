@@ -133,7 +133,7 @@ class Request(HTTPConnection):
         return self._receive
 
     @async_generator
-    async def stream(self):
+    async def stream(self):  # type: ignore
         if hasattr(self, "_body"):
             await yield_(self._body)
             await yield_(b"")

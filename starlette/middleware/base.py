@@ -48,7 +48,7 @@ class BaseHTTPMiddleware:
         assert message["type"] == "http.response.start"
 
         @async_generator
-        async def body_stream():
+        async def body_stream():  # type: ignore
             while True:
                 message = await queue.get()
                 if message is None:
