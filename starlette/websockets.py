@@ -2,7 +2,6 @@ import enum
 import json
 import typing
 
-from starlette.datastructures import URL, Headers, QueryParams
 from starlette.requests import HTTPConnection
 from starlette.types import Message, Receive, Scope, Send
 
@@ -26,42 +25,6 @@ class WebSocket(HTTPConnection):
         self._send = send
         self.client_state = WebSocketState.CONNECTING
         self.application_state = WebSocketState.CONNECTING
-
-    # def __getitem__(self, key: str) -> str:
-    #     return self._scope[key]
-    #
-    # def __iter__(self) -> typing.Iterator:
-    #     return iter(self._scope)
-    #
-    # def __len__(self) -> int:
-    #     return len(self._scope)
-    #
-    # @property
-    # def url(self) -> URL:
-    #     if not hasattr(self, "_url"):
-    #         self._url = URL(scope=self._scope)
-    #     return self._url
-    #
-    # @property
-    # def headers(self) -> Headers:
-    #     if not hasattr(self, "_headers"):
-    #         self._headers = Headers(scope=self._scope)
-    #     return self._headers
-    #
-    # @property
-    # def query_params(self) -> QueryParams:
-    #     if not hasattr(self, "_query_params"):
-    #         self._query_params = QueryParams(scope=self._scope)
-    #     return self._query_params
-    #
-    # @property
-    # def path_params(self) -> dict:
-    #     return self._scope.get("path_params", {})
-    #
-    # def url_for(self, name: str, **path_params: typing.Any) -> str:
-    #     router = self._scope["router"]
-    #     url_path = router.url_path_for(name, **path_params)
-    #     return url_path.make_absolute_url(base_url=self.url)
 
     async def receive(self) -> Message:
         """
@@ -128,12 +91,17 @@ class WebSocket(HTTPConnection):
         self._raise_on_disconnect(message)
         return message["bytes"]
 
-    async def receive_json(self) -> typing.Any:
+    async def receive_json(self, mode: str = "text") -> typing.Any:
+        assert mode in ["text", "binary"]
         assert self.application_state == WebSocketState.CONNECTED
         message = await self.receive()
         self._raise_on_disconnect(message)
-        encoded = message["bytes"]
-        return json.loads(encoded.decode("utf-8"))
+
+        if mode == "text":
+            text = message["text"]
+        else:
+            text = message["bytes"].decode("utf-8")
+        return json.loads(text)
 
     async def send_text(self, data: str) -> None:
         await self.send({"type": "websocket.send", "text": data})
@@ -141,9 +109,13 @@ class WebSocket(HTTPConnection):
     async def send_bytes(self, data: bytes) -> None:
         await self.send({"type": "websocket.send", "bytes": data})
 
-    async def send_json(self, data: typing.Any) -> None:
-        encoded = json.dumps(data).encode("utf-8")
-        await self.send({"type": "websocket.send", "bytes": encoded})
+    async def send_json(self, data: typing.Any, mode: str = "text") -> None:
+        assert mode in ["text", "binary"]
+        text = json.dumps(data)
+        if mode == "text":
+            await self.send({"type": "websocket.send", "text": text})
+        else:
+            await self.send({"type": "websocket.send", "bytes": text.encode("utf-8")})
 
     async def close(self, code: int = 1000) -> None:
         await self.send({"type": "websocket.close", "code": code})

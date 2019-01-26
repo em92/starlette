@@ -67,7 +67,7 @@ class _ASGIAdapter(requests.adapters.HTTPAdapter):
     def send(  # type: ignore
         self, request: requests.PreparedRequest, *args: typing.Any, **kwargs: typing.Any
     ) -> requests.Response:
-        scheme, netloc, path, query, fragement = urlsplit(request.url)  # type: ignore
+        scheme, netloc, path, query, fragment = urlsplit(request.url)  # type: ignore
 
         default_port = {"http": 80, "ws": 80, "https": 443, "wss": 443}[scheme]
 
@@ -286,9 +286,13 @@ class WebSocketTestSession:
     def send_bytes(self, data: bytes) -> None:
         self.send({"type": "websocket.receive", "bytes": data})
 
-    def send_json(self, data: typing.Any) -> None:
-        encoded = json.dumps(data).encode("utf-8")
-        self.send({"type": "websocket.receive", "bytes": encoded})
+    def send_json(self, data: typing.Any, mode: str = "text") -> None:
+        assert mode in ["text", "binary"]
+        text = json.dumps(data)
+        if mode == "text":
+            self.send({"type": "websocket.receive", "text": text})
+        else:
+            self.send({"type": "websocket.receive", "bytes": text.encode("utf-8")})
 
     def close(self, code: int = 1000) -> None:
         self.send({"type": "websocket.disconnect", "code": code})
@@ -309,11 +313,15 @@ class WebSocketTestSession:
         self._raise_on_close(message)
         return message["bytes"]
 
-    def receive_json(self) -> typing.Any:
+    def receive_json(self, mode: str = "text") -> typing.Any:
+        assert mode in ["text", "binary"]
         message = self.receive()
         self._raise_on_close(message)
-        encoded = message["bytes"]
-        return json.loads(encoded.decode("utf-8"))
+        if mode == "text":
+            text = message["text"]
+        else:
+            text = message["bytes"].decode("utf-8")
+        return json.loads(text)
 
 
 class TestClient(requests.Session):

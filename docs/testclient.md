@@ -9,6 +9,7 @@ from starlette.testclient import TestClient
 
 class App:
     def __init__(self, scope):
+        assert scope['type'] == 'http'
         self.scope = scope
 
     async def __call__(self, receive, send):
@@ -49,6 +50,7 @@ from starlette.websockets import WebSocket
 
 class App:
     def __init__(self, scope):
+        assert scope['type'] == 'websocket'
         self.scope = scope
 
     async def __call__(self, receive, send):
@@ -82,13 +84,13 @@ May raise `starlette.websockets.Disconnect` if the application does not accept t
 
 * `.send_text(data)` - Send the given text to the application.
 * `.send_bytes(data)` - Send the given bytes to the application.
-* `.send_json(data)` - Send the given data to the application.
+* `.send_json(data, mode="text")` - Send the given data to the application. Use `mode="binary"` to send JSON over binary data frames.
 
 #### Receiving data
 
 * `.receive_text()` - Wait for incoming text sent by the application and return it.
 * `.receive_bytes()` - Wait for incoming bytestring sent by the application and return it.
-* `.receive_json()` - Wait for incoming json data sent by the application and return it.
+* `.receive_json(mode="text")` - Wait for incoming json data sent by the application and return it. Use `mode="binary"` to send JSON over binary data frames.
 
 May raise `starlette.websockets.Disconnect`.
 

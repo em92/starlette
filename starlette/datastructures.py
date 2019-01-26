@@ -189,7 +189,8 @@ class Secret:
         self._value = value
 
     def __repr__(self) -> str:
-        return "%s('**********')" % self.__class__.__name__
+        class_name = self.__class__.__name__
+        return "%s('**********')" % class_name
 
     def __str__(self) -> str:
         return self._value
@@ -215,43 +216,50 @@ class CommaSeparatedStrings(Sequence):
         return iter(self._items)
 
     def __repr__(self) -> str:
-        list_repr = repr([item for item in self])
-        return "%s(%s)" % (self.__class__.__name__, list_repr)
+        class_name = self.__class__.__name__
+        items = [item for item in self]
+        return "%s(%s)" % (class_name, repr(items))
 
     def __str__(self) -> str:
         return ", ".join([repr(item) for item in self])
 
 
-class QueryParams(typing.Mapping[str, str]):
-    """
-    An immutable multidict.
-    """
-
+class ImmutableMultiDict(typing.Mapping):
     def __init__(
         self,
-        params: typing.Union["QueryParams", typing.Mapping[str, str]] = None,
-        items: typing.List[typing.Tuple[str, str]] = None,
-        query_string: str = None,
-        scope: Scope = None,
+        *args: typing.Union[
+            "ImmutableMultiDict",
+            typing.Mapping,
+            typing.List[typing.Tuple[typing.Any, typing.Any]],
+        ],
+        **kwargs: typing.Any
     ) -> None:
-        _items = []  # type: typing.List[typing.Tuple[str, str]]
-        if params is not None:
-            assert items is None, "Cannot set both 'params' and 'items'"
-            assert query_string is None, "Cannot set both 'params' and 'query_string'"
-            assert scope is None, "Cannot set both 'params' and 'scope'"
-            if isinstance(params, QueryParams):
-                _items = list(params.multi_items())
-            else:
-                _items = list(params.items())
-        elif items is not None:
-            assert query_string is None, "Cannot set both 'items' and 'query_string'"
-            assert scope is None, "Cannot set both 'items' and 'scope'"
-            _items = list(items)
-        elif query_string is not None:
-            assert scope is None, "Cannot set both 'query_string' and 'scope'"
-            _items = parse_qsl(query_string)
-        elif scope is not None:
-            _items = parse_qsl(scope["query_string"].decode("latin-1"))
+        assert len(args) < 2, "Too many arguments."
+
+        if args:
+            value = args[0]
+        else:
+            value = []
+
+        if kwargs:
+            value = (
+                ImmutableMultiDict(value).multi_items()
+                + ImmutableMultiDict(kwargs).multi_items()
+            )
+
+        if not value:
+            _items = []  # type: typing.List[typing.Tuple[typing.Any, typing.Any]]
+        elif hasattr(value, "multi_items"):
+            value = typing.cast(ImmutableMultiDict, value)
+            _items = list(value.multi_items())
+        elif hasattr(value, "items"):
+            value = typing.cast(typing.Mapping, value)
+            _items = list(value.items())
+        else:
+            value = typing.cast(
+                typing.List[typing.Tuple[typing.Any, typing.Any]], value
+            )
+            _items = list(value)
 
         self._dict = {k: v for k, v in _items}
         self._list = _items
@@ -259,14 +267,14 @@ class QueryParams(typing.Mapping[str, str]):
     def getlist(self, key: typing.Any) -> typing.List[str]:
         return [item_value for item_key, item_value in self._list if item_key == key]
 
-    def keys(self) -> typing.List[str]:  # type: ignore
-        return list(self._dict.keys())
+    def keys(self) -> typing.KeysView:
+        return self._dict.keys()
 
-    def values(self) -> typing.List[str]:  # type: ignore
-        return list(self._dict.values())
+    def values(self) -> typing.ValuesView:
+        return self._dict.values()
 
-    def items(self) -> typing.List[typing.Tuple[str, str]]:  # type: ignore
-        return list(self._dict.items())
+    def items(self) -> typing.ItemsView:
+        return self._dict.items()
 
     def multi_items(self) -> typing.List[typing.Tuple[str, str]]:
         return list(self._list)
@@ -289,18 +297,119 @@ class QueryParams(typing.Mapping[str, str]):
         return len(self._dict)
 
     def __eq__(self, other: typing.Any) -> bool:
-        if not isinstance(other, QueryParams):
+        if not isinstance(other, self.__class__):
             return False
         return sorted(self._list) == sorted(other._list)
+
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        items = self.multi_items()
+        return "%s(%s)" % (class_name, repr(items))
+
+
+class MultiDict(ImmutableMultiDict):
+    def __setitem__(self, key: typing.Any, value: typing.Any) -> None:
+        self.setlist(key, [value])
+
+    def __delitem__(self, key: typing.Any) -> None:
+        self._list = [(k, v) for k, v in self._list if k != key]
+        del self._dict[key]
+
+    def pop(self, key: typing.Any, default: typing.Any = None) -> typing.Any:
+        self._list = [(k, v) for k, v in self._list if k != key]
+        return self._dict.pop(key, default)
+
+    def popitem(self) -> typing.Tuple:
+        key, value = self._dict.popitem()
+        self._list = [(k, v) for k, v in self._list if k != key]
+        return key, value
+
+    def poplist(self, key: typing.Any) -> typing.List:
+        values = [v for k, v in self._list if k == key]
+        self.pop(key)
+        return values
+
+    def clear(self) -> None:
+        self._dict.clear()
+        self._list.clear()
+
+    def setdefault(self, key: typing.Any, default: typing.Any = None) -> typing.Any:
+        if key not in self:
+            self._dict[key] = default
+            self._list.append((key, default))
+
+        return self[key]
+
+    def setlist(self, key: typing.Any, values: typing.List) -> None:
+        if not values:
+            self.pop(key, None)
+        else:
+            existing_items = [(k, v) for (k, v) in self._list if k != key]
+            self._list = existing_items + [(key, value) for value in values]
+            self._dict[key] = values[-1]
+
+    def append(self, key: typing.Any, value: typing.Any) -> None:
+        self._list.append((key, value))
+        self._dict[key] = value
+
+    def update(
+        self,
+        *args: typing.Union[
+            "MultiDict",
+            typing.Mapping,
+            typing.List[typing.Tuple[typing.Any, typing.Any]],
+        ],
+        **kwargs: typing.Any
+    ) -> None:
+        value = MultiDict(*args, **kwargs)
+        existing_items = [(k, v) for (k, v) in self._list if k not in value.keys()]
+        self._list = existing_items + value.multi_items()
+        self._dict.update(value)
+
+
+class QueryParams(ImmutableMultiDict):
+    """
+    An immutable multidict.
+    """
+
+    def __init__(
+        self,
+        *args: typing.Union[
+            "ImmutableMultiDict",
+            typing.Mapping,
+            typing.List[typing.Tuple[typing.Any, typing.Any]],
+            str,
+            bytes,
+        ],
+        **kwargs: typing.Any
+    ) -> None:
+        assert len(args) < 2, "Too many arguments."
+
+        value = args[0] if args else []
+
+        if isinstance(value, str):
+            super().__init__(parse_qsl(value), **kwargs)
+        elif isinstance(value, bytes):
+            super().__init__(parse_qsl(value.decode("latin-1")), **kwargs)
+        else:
+            super().__init__(*args, **kwargs)  # type: ignore
+        self._list = [(str(k), str(v)) for k, v in self._list]
+        self._dict = {str(k): str(v) for k, v in self._dict.items()}
 
     def __str__(self) -> str:
         return urlencode(self._list)
 
     def __repr__(self) -> str:
-        return "%s(query_string=%s)" % (self.__class__.__name__, repr(str(self)))
+        class_name = self.__class__.__name__
+        query_string = str(self)
+        return "%s(%s)" % (class_name, repr(query_string))
 
 
 class UploadFile:
+    """
+    An uploaded file included as part of the request data.
+    """
+
     def __init__(self, filename: str, file: typing.IO = None) -> None:
         self.filename = filename
         if file is None:
@@ -320,73 +429,26 @@ class UploadFile:
         await run_in_threadpool(self.file.close)
 
 
-FormValue = typing.Union[str, UploadFile]
-
-
-class FormData(typing.Mapping[str, FormValue]):
+class FormData(ImmutableMultiDict):
     """
     An immutable multidict, containing both file uploads and text input.
     """
 
     def __init__(
         self,
-        form: typing.Union["FormData", typing.Mapping[str, FormValue]] = None,
-        items: typing.List[typing.Tuple[str, FormValue]] = None,
+        *args: typing.Union[
+            "FormData",
+            typing.Mapping[str, typing.Union[str, UploadFile]],
+            typing.List[typing.Tuple[str, typing.Union[str, UploadFile]]],
+        ],
+        **kwargs: typing.Union[str, UploadFile]
     ) -> None:
-        _items = []  # type: typing.List[typing.Tuple[str, FormValue]]
-        if form is not None:
-            assert items is None, "Cannot set both 'form' and 'items'"
-            if isinstance(form, FormData):
-                _items = list(form.multi_items())
-            else:
-                _items = list(form.items())
-        elif items is not None:
-            _items = list(items)
+        super().__init__(*args, **kwargs)  # type: ignore
 
-        self._dict = {k: v for k, v in _items}
-        self._list = _items
-
-    def getlist(self, key: typing.Any) -> typing.List[FormValue]:
-        return [item_value for item_key, item_value in self._list if item_key == key]
-
-    def keys(self) -> typing.List[str]:  # type: ignore
-        return list(self._dict.keys())
-
-    def values(self) -> typing.List[FormValue]:  # type: ignore
-        return list(self._dict.values())
-
-    def items(self) -> typing.List[typing.Tuple[str, FormValue]]:  # type: ignore
-        return list(self._dict.items())
-
-    def multi_items(self) -> typing.List[typing.Tuple[str, FormValue]]:
-        return list(self._list)
-
-    def get(self, key: typing.Any, default: typing.Any = None) -> typing.Any:
-        if key in self._dict:
-            return self._dict[key]
-        return default
-
-    def __getitem__(self, key: typing.Any) -> FormValue:
-        return self._dict[key]
-
-    def __contains__(self, key: typing.Any) -> bool:
-        return key in self._dict
-
-    def __iter__(self) -> typing.Iterator[typing.Any]:
-        return iter(self.keys())
-
-    def __len__(self) -> int:
-        return len(self._dict)
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if not isinstance(other, FormData):
-            return False
-        return sorted(self._list) == sorted(other._list)
-
-    def __repr__(self) -> str:
-        items = self.multi_items()
-        return "{0}(items={1})".format(self.__class__.__name__, repr(items))
-
+    async def close(self) -> None:
+        for key, value in self.multi_items():
+            if isinstance(value, UploadFile):
+                await value.close()
 
 
 class Headers(typing.Mapping[str, str]):
@@ -473,10 +535,11 @@ class Headers(typing.Mapping[str, str]):
         return sorted(self._list) == sorted(other._list)
 
     def __repr__(self) -> str:
+        class_name = self.__class__.__name__
         as_dict = dict(self.items())
         if len(as_dict) == len(self):
-            return "%s(%s)" % (self.__class__.__name__, repr(as_dict))
-        return "%s(raw=%s)" % (self.__class__.__name__, repr(self.raw))
+            return "%s(%s)" % (class_name, repr(as_dict))
+        return "%s(raw=%s)" % (class_name, repr(self.raw))
 
 
 class MutableHeaders(Headers):

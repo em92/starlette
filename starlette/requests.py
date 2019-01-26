@@ -53,7 +53,7 @@ class HTTPConnection(Mapping):
     @property
     def query_params(self) -> QueryParams:
         if not hasattr(self, "_query_params"):
-            self._query_params = QueryParams(scope=self._scope)
+            self._query_params = QueryParams(self._scope["query_string"])
         return self._query_params
 
     @property
@@ -189,9 +189,7 @@ class Request(HTTPConnection):
 
     async def close(self) -> None:
         if hasattr(self, "_form"):
-            for key, item in self._form.multi_items():
-                if hasattr(item, "close"):
-                    await item.close()  # type: ignore
+            await self._form.close()
 
     async def is_disconnected(self) -> bool:
         if not self._is_disconnected:
