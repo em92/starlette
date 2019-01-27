@@ -1,12 +1,18 @@
 import tempfile
 import typing
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from collections.abc import Sequence
 from shlex import shlex
 from urllib.parse import SplitResult, parse_qsl, urlencode, urlsplit
 
 from starlette.concurrency import run_in_threadpool
 from starlette.types import Scope
+
+
+class Dict(OrderedDict):
+    def __repr__(self) -> str:
+        return '{' + ', '.join(str(dict({x: y})).strip('{}') for x, y in self.items()) + '}'
+
 
 Address = namedtuple("Address", ["host", "port"])
 
@@ -261,7 +267,7 @@ class ImmutableMultiDict(typing.Mapping):
             )
             _items = list(value)
 
-        self._dict = {k: v for k, v in _items}
+        self._dict = Dict([(k, v) for k, v in _items])
         self._list = _items
 
     def getlist(self, key: typing.Any) -> typing.List[str]:
@@ -394,7 +400,7 @@ class QueryParams(ImmutableMultiDict):
         else:
             super().__init__(*args, **kwargs)  # type: ignore
         self._list = [(str(k), str(v)) for k, v in self._list]
-        self._dict = {str(k): str(v) for k, v in self._dict.items()}
+        self._dict = Dict([(str(k), str(v)) for k, v in self._dict.items()])
 
     def __str__(self) -> str:
         return urlencode(self._list)
@@ -536,7 +542,7 @@ class Headers(typing.Mapping[str, str]):
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
-        as_dict = dict(self.items())
+        as_dict = Dict(self.items())
         if len(as_dict) == len(self):
             return "%s(%s)" % (class_name, repr(as_dict))
         return "%s(raw=%s)" % (class_name, repr(self.raw))
