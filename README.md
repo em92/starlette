@@ -12,4 +12,4 @@ Comparing to original starlette it doesn't give you:
 
 Reasons of above is Python 3.5:
 1. Till 3.5.4 exclusively does not have type annotation `typing.AsyncGenerator`. See commit `f691b60784abee7d4aa0fad3ef2da64783cb8c30`
-2. `async_generator` package is required to port functions, that are use as async generators (yield from async function).
+2. `async_generator` package is required to port functions, that are used as async generators (yield inside async function is supported in 3.6+).
