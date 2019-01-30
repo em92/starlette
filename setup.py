@@ -42,6 +42,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Tom Christie',
     author_email='tom@tomchristie.com',
+    install_requires=['async_generator'],
     packages=get_packages('starlette'),
     package_data = {
         'starlette': ['py.typed'],
@@ -69,7 +70,6 @@ setup(
         'Operating System :: OS Independent',
         'Topic :: Internet :: WWW/HTTP',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.5',
     ],
 )
