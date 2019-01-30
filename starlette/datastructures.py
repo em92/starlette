@@ -11,7 +11,11 @@ from starlette.types import Scope
 
 class Dict(OrderedDict):
     def __repr__(self) -> str:
-        return '{' + ', '.join(str(dict({x: y})).strip('{}') for x, y in self.items()) + '}'
+        return (
+            "{"
+            + ", ".join(str(dict({x: y})).strip("{}") for x, y in self.items())
+            + "}"
+        )
 
 
 Address = namedtuple("Address", ["host", "port"])

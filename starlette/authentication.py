@@ -31,7 +31,9 @@ def requires(
                 type = parameter.name
                 break
         else:
-            raise Exception('No "request" or "websocket" argument on function "%s"' % func)
+            raise Exception(
+                'No "request" or "websocket" argument on function "%s"' % func
+            )
 
         if type == "websocket":
             # Handle websocket functions. (Always async)

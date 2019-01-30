@@ -144,7 +144,10 @@ def test_headers():
     assert h["A"] == "123"
     assert h["B"] == "789"
     assert set(h.raw) == set([(b"a", b"123"), (b"b", b"789")])
-    assert repr(h) == "Headers({'a': '123', 'b': '789'})" or repr(h) == "Headers({'b': '789', 'a': '123'})"
+    assert (
+        repr(h) == "Headers({'a': '123', 'b': '789'})"
+        or repr(h) == "Headers({'b': '789', 'a': '123'})"
+    )
 
     h = Headers(OrderedDict([("a", "123"), ("b", "789")]))
     assert h["A"] == "123"

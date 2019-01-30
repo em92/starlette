@@ -289,7 +289,9 @@ class FileResponse(Response):
             else:
                 mode = stat_result.st_mode
                 if not stat.S_ISREG(mode):
-                    raise RuntimeError("File at path {0} is not a file.".format(self.path))
+                    raise RuntimeError(
+                        "File at path {0} is not a file.".format(self.path)
+                    )
         await send(
             {
                 "type": "http.response.start",

@@ -20,11 +20,11 @@ class OpenAPIResponse(Response):
         ), "The schema passed to OpenAPIResponse should be a dictionary."
         return yaml.dump(content, default_flow_style=False).encode("utf-8")
 
-EndpointInfo = typing.NamedTuple('EndpointInfo', [
-    ('path', str),
-    ('http_method', str),
-    ('func', typing.Callable),
-])
+
+EndpointInfo = typing.NamedTuple(
+    "EndpointInfo", [("path", str), ("http_method", str), ("func", typing.Callable)]
+)
+
 
 class BaseSchemaGenerator:
     def get_schema(self, routes: typing.List[BaseRoute]) -> dict:

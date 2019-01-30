@@ -15,6 +15,7 @@ try:
 except ImportError:  # pragma: nocover
     parse_options_header = None  # type: ignore
 
+
 class ClientDisconnect(Exception):
     pass
 

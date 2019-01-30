@@ -36,7 +36,7 @@ class SessionMiddleware:
                 data = request.cookies[self.session_cookie].encode("utf-8")
                 try:
                     data = self.signer.unsign(data, max_age=self.max_age)
-                    scope["session"] = json.loads(b64decode(data).decode('utf-8'))
+                    scope["session"] = json.loads(b64decode(data).decode("utf-8"))
                 except (BadTimeSignature, SignatureExpired):
                     scope["session"] = {}
             else:

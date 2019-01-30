@@ -67,7 +67,9 @@ def test_session_expires():
     # requests removes expired cookies from response.cookies, we need to
     # fetch session id from the headers and pass it explicitly
     expired_cookie_header = response.headers["set-cookie"]
-    expired_session_value = re.search(r"session=([^;]*);", expired_cookie_header).group(1)
+    expired_session_value = re.search(r"session=([^;]*);", expired_cookie_header).group(
+        1
+    )
     response = client.get("/view_session", cookies={"session": expired_session_value})
     assert response.json() == {"session": {}}
 

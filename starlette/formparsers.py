@@ -32,9 +32,7 @@ class MultiPartMessage(Enum):
 
 
 class FormParser:
-    def __init__(  # type: ignore
-        self, headers: Headers, stream
-    ) -> None:
+    def __init__(self, headers: Headers, stream) -> None:  # type: ignore
         assert (
             multipart is not None
         ), "The `python-multipart` library must be installed to use form parsing."
@@ -108,9 +106,7 @@ class FormParser:
 
 
 class MultiPartParser:
-    def __init__(  # type: ignore
-        self, headers: Headers, stream
-    ) -> None:
+    def __init__(self, headers: Headers, stream) -> None:  # type: ignore
         assert (
             multipart is not None
         ), "The `python-multipart` library must be installed to use form parsing."
