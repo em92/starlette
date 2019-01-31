@@ -24,9 +24,7 @@ That library aims to bring a layer on top of Starlette framework to provide usef
 * **Components** as the base of the plugin ecosystem, allowing you to create custom or use those already defined in your endpoints, injected as parameters.
 * **Starlette ASGI** objects like `Request`, `Response`, `Session` and so on are defined as components and ready to be injected in your endpoints.
 
-
 ### webargs-starlette
-
 
 Link: <a href="https://github.com/sloria/webargs-starlette" target="_blank">https://github.com/sloria/webargs-starlette</a>
 
@@ -58,6 +56,29 @@ if __name__ == "__main__":
 # {"Hello": "World"}
 # curl 'http://localhost:5000/?name=Ada'
 # {"Hello": "Ada"}
+```
+
+### Mangum
+
+Link: <a href="https://github.com/erm/mangum" target="_blank">https://github.com/erm/mangum</a>
+
+Serverless ASGI adapter for AWS Lambda & API Gateway.
+
+```Python
+from starlette.applications import Starlette
+from starlette.responses import PlainTextResponse
+from mangum import Mangum
+
+
+app = Starlette()
+
+
+@app.route("/")
+def homepage(request):
+    return PlainTextResponse("Hello, world!")
+
+
+handler = Mangum(app)  # optionally set debug=True
 ```
 
 
@@ -119,4 +140,37 @@ app = FastAPI()
 @app.get('/')
 def read_root():
     return {'hello': 'world'}
+```
+
+### Bocadillo
+
+Link: <a href="https://bocadilloproject.github.io" target="_blank">https://bocadilloproject.github.io</a>
+
+A modern Python web framework filled with asynchronous salsa.
+
+Bocadillo is **async-first** and designed with productivity and simplicity in mind. It is not meant to be minimal: a **carefully chosen set of included batteries** helps you build performant web apps and services with minimal setup.
+
+Key features include:
+
+* Simple, powerful and familiar views and routing, inspired by the greatest (Flask, Falcon).
+* First-class support for both HTTP / REST and WebSocket.
+* Built-in CORS, HSTS, GZip, HTTP streaming, Jinja2 templates, background tasks, static files…
+
+… and more ahead, as depicted in the <a href="https://github.com/bocadilloproject/bocadillo/blob/master/ROADMAP.md" target="_blank">Roadmap</a>.
+
+The example below demonstrates a simple WebSocket echo server.
+
+```python
+from bocadillo import API, WebSocket
+
+api = API()
+
+@api.websocket_route("/echo")
+async def echo(ws: WebSocket):
+    async with ws:
+        async for message in ws:
+            await ws.send(message)
+
+if __name__ == "__main__":
+    api.run()
 ```
