@@ -2,7 +2,9 @@ Ported version of starlette to run on Python 3.5
 
 # Install
 
+```
 python3 -m pip install git+https://github.com/em92/starlette
+```
 
 # Notes
 
