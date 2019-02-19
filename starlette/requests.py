@@ -40,6 +40,10 @@ class HTTPConnection(Mapping):
         return len(self._scope)
 
     @property
+    def app(self) -> typing.Any:
+        return self._scope["app"]
+
+    @property
     def url(self) -> URL:
         if not hasattr(self, "_url"):
             self._url = URL(scope=self._scope)
@@ -88,6 +92,9 @@ class HTTPConnection(Mapping):
 
     @property
     def database(self) -> typing.Any:  # pragma: no cover
+        # NOTE: Pending deprecation. You probably want to look at the
+        # stand-alone `databases` package instead.
+        # https://github.com/encode/databases
         assert (
             "database" in self._scope
         ), "DatabaseMiddleware must be installed to access request.database"
