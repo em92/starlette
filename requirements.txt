@@ -7,7 +7,7 @@ python-multipart
 pyyaml
 requests
 ujson
-databases[sqlite]
+git+https://github.com/em92/databases.git#[sqlite]
 
 # Legacy
 sqlalchemy
