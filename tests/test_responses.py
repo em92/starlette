@@ -3,7 +3,6 @@ import os
 
 import pytest
 from async_generator import async_generator, yield_
-
 from starlette import status
 from starlette.background import BackgroundTask
 from starlette.requests import Request

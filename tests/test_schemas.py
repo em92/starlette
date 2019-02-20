@@ -10,6 +10,10 @@ schemas = SchemaGenerator(
 app = Starlette()
 
 
+subapp = Starlette()
+app.mount("/subapp", subapp)
+
+
 @app.websocket_route("/ws")
 def ws(session):
     """ws"""
@@ -63,6 +67,43 @@ class OrganisationsEndpoint(HTTPEndpoint):
         pass  # pragma: no cover
 
 
+@app.route("/regular-docstring-and-schema")
+def regular_docstring_and_schema(request):
+    """
+    This a regular docstring example (not included in schema)
+
+    ---
+
+    responses:
+      200:
+        description: This is included in the schema.
+    """
+    pass  # pragma: no cover
+
+
+@app.route("/regular-docstring")
+def regular_docstring(request):
+    """
+    This a regular docstring example (not included in schema)
+    """
+    pass  # pragma: no cover
+
+
+@app.route("/no-docstring")
+def no_docstring(request):
+    pass  # pragma: no cover
+
+
+@subapp.route("/subapp-endpoint")
+def subapp_endpoint(request):
+    """
+    responses:
+      200:
+        description: This endpoint is part of a subapp.
+    """
+    pass  # pragma: no cover
+
+
 @app.route("/schema", methods=["GET"], include_in_schema=False)
 def schema(request):
     return schemas.OpenAPIResponse(request=request)
@@ -92,6 +133,20 @@ def test_schema_generation():
                     }
                 },
             },
+            "/regular-docstring-and-schema": {
+                "get": {
+                    "responses": {
+                        200: {"description": "This is included in the schema."}
+                    }
+                }
+            },
+            "/subapp/subapp-endpoint": {
+                "get": {
+                    "responses": {
+                        200: {"description": "This endpoint is part of a subapp."}
+                    }
+                }
+            },
             "/users": {
                 "get": {
                     "responses": {
@@ -109,11 +164,6 @@ def test_schema_generation():
             },
         },
     }
-
-
-def test_schema_generation_legacy():
-    app.schema_generator = schemas
-    assert app.schema == schemas.get_schema(routes=app.routes)
 
 
 EXPECTED_SCHEMA = """
@@ -136,6 +186,16 @@ paths:
           description: An organisation.
           examples:
             name: Foo Corp.
+  /regular-docstring-and-schema:
+    get:
+      responses:
+        200:
+          description: This is included in the schema.
+  /subapp/subapp-endpoint:
+    get:
+      responses:
+        200:
+          description: This endpoint is part of a subapp.
   /users:
     get:
       responses:

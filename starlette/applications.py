@@ -4,7 +4,6 @@ from starlette.datastructures import URLPath
 from starlette.exceptions import ExceptionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
-from starlette.middleware.lifespan import LifespanMiddleware
 from starlette.routing import BaseRoute, Router
 from starlette.schemas import BaseSchemaGenerator
 from starlette.types import ASGIApp, ASGIInstance, Scope
@@ -23,12 +22,6 @@ class Starlette:
         self.error_middleware = ServerErrorMiddleware(
             self.exception_middleware, debug=debug
         )
-        self.lifespan_middleware = LifespanMiddleware(self.error_middleware)
-        self.schema_generator = None  # type: typing.Optional[BaseSchemaGenerator]
-        if template_directory is not None:
-            from starlette.templating import Jinja2Templates
-
-            self.templates = Jinja2Templates(template_directory)
 
     @property
     def routes(self) -> typing.List[BaseRoute]:
@@ -44,16 +37,8 @@ class Starlette:
         self.exception_middleware.debug = value
         self.error_middleware.debug = value
 
-    def get_template(self, name: str) -> typing.Any:
-        return self.templates.get_template(name)
-
-    @property
-    def schema(self) -> dict:
-        assert self.schema_generator is not None
-        return self.schema_generator.get_schema(self.routes)
-
     def on_event(self, event_type: str) -> typing.Callable:
-        return self.lifespan_middleware.on_event(event_type)
+        return self.router.lifespan.on_event(event_type)
 
     def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
         self.router.mount(path, app=app, name=name)
@@ -79,7 +64,7 @@ class Starlette:
             )
 
     def add_event_handler(self, event_type: str, func: typing.Callable) -> None:
-        self.lifespan_middleware.add_event_handler(event_type, func)
+        self.router.lifespan.add_event_handler(event_type, func)
 
     def add_route(
         self,
@@ -149,4 +134,4 @@ class Starlette:
 
     def __call__(self, scope: Scope) -> ASGIInstance:
         scope["app"] = self
-        return self.lifespan_middleware(scope)
+        return self.error_middleware(scope)

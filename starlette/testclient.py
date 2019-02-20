@@ -9,7 +9,6 @@ import typing
 from urllib.parse import unquote, urljoin, urlsplit
 
 import requests
-
 from starlette.types import ASGIApp, Message, Scope
 from starlette.websockets import WebSocketDisconnect
 

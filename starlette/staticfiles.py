@@ -4,7 +4,6 @@ import typing
 from email.utils import parsedate
 
 from aiofiles.os import stat as aio_stat
-
 from starlette.datastructures import Headers
 from starlette.responses import FileResponse, PlainTextResponse, Response
 from starlette.types import ASGIInstance, Receive, Scope, Send

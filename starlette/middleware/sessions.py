@@ -5,7 +5,6 @@ from base64 import b64decode, b64encode
 
 import itsdangerous
 from itsdangerous.exc import BadTimeSignature, SignatureExpired
-
 from starlette.datastructures import MutableHeaders, Secret
 from starlette.requests import Request
 from starlette.types import ASGIApp, ASGIInstance, Message, Receive, Scope, Send

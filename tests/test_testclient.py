@@ -1,5 +1,4 @@
 import pytest
-
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.testclient import TestClient

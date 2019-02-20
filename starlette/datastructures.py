@@ -1,6 +1,6 @@
 import tempfile
 import typing
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 from collections.abc import Sequence
 from shlex import shlex
 from urllib.parse import SplitResult, parse_qsl, urlencode, urlsplit
@@ -142,30 +142,6 @@ class URL:
         if self.password:
             url = str(self.replace(password="********"))
         return "%s(%s)" % (self.__class__.__name__, repr(url))
-
-
-class DatabaseURL(URL):
-    def __init__(self, url: typing.Union[str, URL]):
-        return super().__init__(str(url))
-
-    @property
-    def database(self) -> str:
-        return self.path.lstrip("/")
-
-    @property
-    def dialect(self) -> str:
-        return self.scheme.split("+")[0]
-
-    @property
-    def driver(self) -> str:
-        if "+" not in self.scheme:
-            return ""
-        return self.scheme.split("+", 1)[1]
-
-    def replace(self, **kwargs: typing.Any) -> "URL":
-        if "database" in kwargs:
-            kwargs["path"] = "/" + kwargs.pop("database")
-        return super().replace(**kwargs)
 
 
 class URLPath(str):

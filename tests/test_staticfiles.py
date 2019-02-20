@@ -2,7 +2,6 @@ import os
 import time
 
 import pytest
-
 from starlette.staticfiles import StaticFiles
 from starlette.testclient import TestClient
 
