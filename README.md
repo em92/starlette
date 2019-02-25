@@ -1,3 +1,5 @@
+[![Build status](https://travis-ci.org/em92/starlette.svg?branch=python35-port)](https://travis-ci.org/em92/starlette)
+
 Ported version of starlette to run on Python 3.5
 
 # Install
