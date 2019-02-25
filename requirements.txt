@@ -1,6 +1,6 @@
 # Optionals
 aiofiles
-git+https://github.com/em92/databases.git#[sqlite]
+git+https://github.com/em92/databases.git#egg=project[sqlite]
 graphene
 itsdangerous
 jinja2
