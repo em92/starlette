@@ -1,4 +1,5 @@
 [![Build status](https://travis-ci.org/em92/starlette.svg?branch=python35-port)](https://travis-ci.org/em92/starlette)
+[![Coverage](https://codecov.io/gh/em92/starlette/branch/python35-port/graph/badge.svg)](https://codecov.io/gh/em92/starlette)
 
 Ported version of starlette to run on Python 3.5
 
