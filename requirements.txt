@@ -1,6 +1,5 @@
 # Optionals
 aiofiles
-git+https://github.com/em92/databases.git#egg=project[sqlite]
 graphene
 itsdangerous
 jinja2
@@ -11,7 +10,7 @@ ujson
 
 # Testing
 autoflake
-codecov
+git+https://github.com/em92/databases.git#egg=project[sqlite]
 isort
 mypy
 pytest
