@@ -40,9 +40,10 @@ def _next(iterator: Iterator) -> Any:
         raise _StopIteration
 
 
-async def iterate_in_threadpool(iterator: Iterator) -> AsyncGenerator:
+@async_generator
+async def iterate_in_threadpool(iterator: Iterator):
     while True:
         try:
-            yield await run_in_threadpool(_next, iterator)
+            await yield_(run_in_threadpool(_next, iterator))
         except _StopIteration:
             break
