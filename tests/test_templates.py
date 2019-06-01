@@ -2,7 +2,6 @@ import os
 
 import pytest
 from starlette.applications import Starlette
-from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from starlette.testclient import TestClient
 

@@ -52,7 +52,6 @@ setup(
     extras_require={
         "full": [
             "aiofiles",
-            "asyncpg",
             "graphene",
             "itsdangerous",
             "jinja2",
@@ -72,4 +71,5 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
     ],
+    zip_safe=False,
 )

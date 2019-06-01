@@ -7,6 +7,8 @@ that is not committed to source control.
 **app.py**:
 
 ```python
+import databases
+
 from starlette.applications import Starlette
 from starlette.config import Config
 from starlette.datastructures import CommaSeparatedStrings, Secret
@@ -15,7 +17,7 @@ from starlette.datastructures import CommaSeparatedStrings, Secret
 config = Config(".env")
 
 DEBUG = config('DEBUG', cast=bool, default=False)
-DATABASE_URL = config('DATABASE_URL', cast=URL)
+DATABASE_URL = config('DATABASE_URL', cast=databases.DatabaseURL)
 SECRET_KEY = config('SECRET_KEY', cast=Secret)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=CommaSeparatedStrings)
 
@@ -32,7 +34,7 @@ app.debug = DEBUG
 DEBUG=True
 DATABASE_URL=postgresql://localhost/myproject
 SECRET_KEY=43n080musdfjt54t-09sdgr
-ALLOWED_HOSTS="127.0.0.1", "localhost"
+ALLOWED_HOSTS=127.0.0.1, localhost
 ```
 
 ## Configuration precedence

@@ -8,9 +8,11 @@ from email.utils import formatdate
 from mimetypes import guess_type
 from urllib.parse import quote_plus
 
+from async_generator import isasyncgen
 from starlette.background import BackgroundTask
+from starlette.concurrency import iterate_in_threadpool
 from starlette.datastructures import URL, MutableHeaders
-from starlette.types import Receive, Send
+from starlette.types import Receive, Scope, Send
 
 try:
     import aiofiles
@@ -116,7 +118,7 @@ class Response:
     def delete_cookie(self, key: str, path: str = "/", domain: str = None) -> None:
         self.set_cookie(key, expires=0, max_age=0, path=path, domain=domain)
 
-    async def __call__(self, receive: Receive, send: Send) -> None:
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         await send(
             {
                 "type": "http.response.start",
@@ -163,7 +165,7 @@ class RedirectResponse(Response):
         self, url: typing.Union[str, URL], status_code: int = 302, headers: dict = None
     ) -> None:
         super().__init__(content=b"", status_code=status_code, headers=headers)
-        self.headers["location"] = quote_plus(str(url), safe=":/#?&=@[]!$&'()*+,;")
+        self.headers["location"] = quote_plus(str(url), safe=":/%#?&=@[]!$&'()*+,;")
 
 
 class StreamingResponse(Response):
@@ -175,13 +177,16 @@ class StreamingResponse(Response):
         media_type: str = None,
         background: BackgroundTask = None,
     ) -> None:
-        self.body_iterator = content
+        if isasyncgen(content):
+            self.body_iterator = content
+        else:
+            self.body_iterator = iterate_in_threadpool(content)
         self.status_code = status_code
         self.media_type = self.media_type if media_type is None else media_type
         self.background = background
         self.init_headers(headers)
 
-    async def __call__(self, receive: Receive, send: Send) -> None:
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         await send(
             {
                 "type": "http.response.start",
@@ -205,6 +210,7 @@ class FileResponse(Response):
     def __init__(
         self,
         path: str,
+        status_code: int = 200,
         headers: dict = None,
         media_type: str = None,
         background: BackgroundTask = None,
@@ -214,7 +220,7 @@ class FileResponse(Response):
     ) -> None:
         assert aiofiles is not None, "'aiofiles' must be installed to use FileResponse"
         self.path = path
-        self.status_code = 200
+        self.status_code = status_code
         self.filename = filename
         self.send_header_only = method is not None and method.upper() == "HEAD"
         if media_type is None:
@@ -239,7 +245,7 @@ class FileResponse(Response):
         self.headers.setdefault("last-modified", last_modified)
         self.headers.setdefault("etag", etag)
 
-    async def __call__(self, receive: Receive, send: Send) -> None:
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if self.stat_result is None:
             try:
                 stat_result = await aio_stat(self.path)

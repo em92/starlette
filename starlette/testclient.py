@@ -1,5 +1,6 @@
 import asyncio
 import http
+import inspect
 import io
 import json
 import queue
@@ -9,7 +10,7 @@ import typing
 from urllib.parse import unquote, urljoin, urlsplit
 
 import requests
-from starlette.types import ASGIApp, Message, Scope
+from starlette.types import Message, Receive, Scope, Send
 from starlette.websockets import WebSocketDisconnect
 
 # Annotations for `Session.request()`
@@ -25,6 +26,11 @@ AuthType = typing.Union[
     requests.auth.AuthBase,
     typing.Callable[[requests.Request], requests.Request],
 ]
+
+
+ASGIInstance = typing.Callable[[Receive, Send], typing.Awaitable[None]]
+ASGI2App = typing.Callable[[Scope], ASGIInstance]
+ASGI3App = typing.Callable[[Scope, Receive, Send], typing.Awaitable[None]]
 
 
 class _HeaderDict(requests.packages.urllib3._collections.HTTPHeaderDict):
@@ -58,8 +64,30 @@ def _get_reason_phrase(status_code: int) -> str:
         return ""
 
 
+def _is_asgi3(app: typing.Union[ASGI2App, ASGI3App]) -> bool:
+    if inspect.isclass(app):
+        return hasattr(app, "__await__")
+    elif inspect.isfunction(app):
+        return asyncio.iscoroutinefunction(app)
+    call = getattr(app, "__call__", None)
+    return asyncio.iscoroutinefunction(call)
+
+
+class _WrapASGI2:
+    """
+    Provide an ASGI3 interface onto an ASGI2 app.
+    """
+
+    def __init__(self, app: ASGI2App) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        instance = self.app(scope)
+        await instance(receive, send)
+
+
 class _ASGIAdapter(requests.adapters.HTTPAdapter):
-    def __init__(self, app: ASGIApp, raise_server_exceptions: bool = True) -> None:
+    def __init__(self, app: ASGI3App, raise_server_exceptions: bool = True) -> None:
         self.app = app
         self.raise_server_exceptions = raise_server_exceptions
 
@@ -203,8 +231,7 @@ class _ASGIAdapter(requests.adapters.HTTPAdapter):
             asyncio.set_event_loop(loop)
 
         try:
-            connection = self.app(scope)
-            loop.run_until_complete(connection(receive, send))
+            loop.run_until_complete(self.app(scope, receive, send))
         except BaseException as exc:
             if self.raise_server_exceptions:
                 raise exc from None
@@ -231,10 +258,11 @@ class _ASGIAdapter(requests.adapters.HTTPAdapter):
 
 
 class WebSocketTestSession:
-    def __init__(self, app: ASGIApp, scope: Scope) -> None:
+    def __init__(self, app: ASGI3App, scope: Scope) -> None:
+        self.app = app
+        self.scope = scope
         self.accepted_subprotocol = None
         self._loop = asyncio.new_event_loop()
-        self._instance = app(scope)
         self._receive_queue = queue.Queue()  # type: queue.Queue
         self._send_queue = queue.Queue()  # type: queue.Queue
         self._thread = threading.Thread(target=self._run)
@@ -259,14 +287,17 @@ class WebSocketTestSession:
         """
         The sub-thread in which the websocket session runs.
         """
+        scope = self.scope
+        receive = self._asgi_receive
+        send = self._asgi_send
         try:
-            asgi = self._instance(self._asgi_receive, self._asgi_send)
-            task = self._loop.create_task(asgi)
-            self._loop.run_until_complete(task)
+            self._loop.run_until_complete(self.app(scope, receive, send))
         except BaseException as exc:
             self._send_queue.put(exc)
 
     async def _asgi_receive(self) -> Message:
+        while self._receive_queue.empty():
+            await asyncio.sleep(0)
         return self._receive_queue.get()
 
     async def _asgi_send(self, message: Message) -> None:
@@ -328,18 +359,26 @@ class TestClient(requests.Session):
 
     def __init__(
         self,
-        app: ASGIApp,
+        app: typing.Union[ASGI2App, ASGI3App],
         base_url: str = "http://testserver",
         raise_server_exceptions: bool = True,
     ) -> None:
         super(TestClient, self).__init__()
-        adapter = _ASGIAdapter(app, raise_server_exceptions=raise_server_exceptions)
+        if _is_asgi3(app):
+            app = typing.cast(ASGI3App, app)
+            asgi_app = app
+        else:
+            app = typing.cast(ASGI2App, app)
+            asgi_app = _WrapASGI2(app)  #  type: ignore
+        adapter = _ASGIAdapter(
+            asgi_app, raise_server_exceptions=raise_server_exceptions
+        )
         self.mount("http://", adapter)
         self.mount("https://", adapter)
         self.mount("ws://", adapter)
         self.mount("wss://", adapter)
         self.headers.update({"user-agent": "testclient"})
-        self.app = app
+        self.app = asgi_app
         self.base_url = base_url
 
     def request(
@@ -414,9 +453,9 @@ class TestClient(requests.Session):
         loop.run_until_complete(self.wait_shutdown())
 
     async def lifespan(self) -> None:
+        scope = {"type": "lifespan"}
         try:
-            inner = self.app({"type": "lifespan"})
-            await inner(self.receive_queue.get, self.send_queue.put)
+            await self.app(scope, self.receive_queue.get, self.send_queue.put)
         finally:
             await self.send_queue.put(None)
 

@@ -165,13 +165,13 @@ app.add_middleware(CustomHeaderMiddleware)
 If you want to provide configuration options to the middleware class you should
 override the `__init__` method, ensuring that the first argument is `app`, and
 any remaining arguments are optional keyword arguments. Make sure to set the `app`
-attribute on the class if you do this.
+attribute on the instance if you do this.
 
 ```python
 class CustomHeaderMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, header_value='Example'):
         self.app = app
-        self.header_value
+        self.header_value = header_value
 
     async def dispatch(self, request, call_next):
         response = await call_next(request)
@@ -211,3 +211,8 @@ A middleware class for logging exceptions to [Sentry](https://sentry.io/).
 
 Uvicorn includes a middleware class for determining the client IP address,
 when proxy servers are being used, based on the `X-Forwarded-Proto` and `X-Forwarded-For` headers. For more complex proxy configurations, you might want to adapt this middleware.
+
+#### [TimingMiddleware](https://github.com/steinnes/timing-asgi)
+
+A middleware class to emit timing information (cpu and wall time) for each request which
+passes through it.  Includes examples for how to emit these timings as statsd metrics.
