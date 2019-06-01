@@ -41,7 +41,7 @@ def _next(iterator: Iterator) -> Any:
 
 
 @async_generator
-async def iterate_in_threadpool(iterator: Iterator):
+async def iterate_in_threadpool(iterator: Iterator):  # type: ignore
     while True:
         try:
             await yield_(await run_in_threadpool(_next, iterator))
