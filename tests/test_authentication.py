@@ -2,6 +2,7 @@ import base64
 import binascii
 
 import pytest
+
 from starlette.applications import Starlette
 from starlette.authentication import (
     AuthCredentials,

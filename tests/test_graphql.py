@@ -1,5 +1,6 @@
 import graphene
 from graphql.execution.executors.asyncio import AsyncioExecutor
+
 from starlette.applications import Starlette
 from starlette.datastructures import Headers
 from starlette.graphql import GraphQLApp

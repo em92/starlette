@@ -1,4 +1,5 @@
 import pytest
+
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.responses import JSONResponse, Response
 from starlette.testclient import TestClient

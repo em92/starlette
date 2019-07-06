@@ -9,6 +9,7 @@ from mimetypes import guess_type
 from urllib.parse import quote_plus
 
 from async_generator import isasyncgen
+
 from starlette.background import BackgroundTask
 from starlette.concurrency import iterate_in_threadpool
 from starlette.datastructures import URL, MutableHeaders
@@ -39,10 +40,7 @@ class Response:
         media_type: str = None,
         background: BackgroundTask = None,
     ) -> None:
-        if content is None:
-            self.body = b""
-        else:
-            self.body = self.render(content)
+        self.body = self.render(content)
         self.status_code = status_code
         if media_type is not None:
             self.media_type = media_type
@@ -50,6 +48,8 @@ class Response:
         self.init_headers(headers)
 
     def render(self, content: typing.Any) -> bytes:
+        if content is None:
+            return b""
         if isinstance(content, bytes):
             return content
         return content.encode(self.charset)
@@ -162,7 +162,7 @@ class UJSONResponse(JSONResponse):
 
 class RedirectResponse(Response):
     def __init__(
-        self, url: typing.Union[str, URL], status_code: int = 302, headers: dict = None
+        self, url: typing.Union[str, URL], status_code: int = 307, headers: dict = None
     ) -> None:
         super().__init__(content=b"", status_code=status_code, headers=headers)
         self.headers["location"] = quote_plus(str(url), safe=":/%#?&=@[]!$&'()*+,;")

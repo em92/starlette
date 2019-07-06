@@ -1,10 +1,10 @@
+import databases
 import pytest
 import sqlalchemy
+
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.testclient import TestClient
-
-import databases
 
 DATABASE_URL = "sqlite:///test.db"
 

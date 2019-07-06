@@ -2,6 +2,7 @@ import asyncio
 import typing
 
 from async_generator import async_generator, yield_
+
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -30,7 +31,7 @@ class BaseHTTPMiddleware:
         loop = asyncio.get_event_loop()
         queue = asyncio.Queue()  # type: asyncio.Queue
 
-        scope = dict(request)
+        scope = request.scope
         receive = request.receive
         send = queue.put
 

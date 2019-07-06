@@ -1,8 +1,9 @@
 import asyncio
 import functools
 import typing
-from async_generator import async_generator, yield_
 from typing import Any, Iterator
+
+from async_generator import async_generator, yield_
 
 try:
     import contextvars  # Python 3.7+ only.

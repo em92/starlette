@@ -1,6 +1,7 @@
 import sys
 
 import pytest
+
 from starlette.middleware.wsgi import WSGIMiddleware, build_environ
 from starlette.testclient import TestClient
 

@@ -5,8 +5,14 @@ import typing
 from email.utils import parsedate
 
 from aiofiles.os import stat as aio_stat
-from starlette.datastructures import Headers, URL
-from starlette.responses import FileResponse, RedirectResponse, PlainTextResponse, Response
+
+from starlette.datastructures import URL, Headers
+from starlette.responses import (
+    FileResponse,
+    PlainTextResponse,
+    RedirectResponse,
+    Response,
+)
 from starlette.types import Receive, Scope, Send
 
 
@@ -52,7 +58,7 @@ class StaticFiles:
         self, directory: str = None, packages: typing.List[str] = None
     ) -> typing.List[str]:
         """
-        Given `directory` and `packages` arugments, return a list of all the
+        Given `directory` and `packages` arguments, return a list of all the
         directories that should be used for serving static files from.
         """
         directories = []
