@@ -1,4 +1,5 @@
 import asyncio
+import html
 import inspect
 import traceback
 import typing
@@ -221,7 +222,7 @@ class ServerErrorMiddleware:
             exc_html += self.generate_frame_html(frame, center_lineno, is_collapsed)
             is_collapsed = True
 
-        error = "{0}: {1}".format(traceback_obj.exc_type.__name__, traceback_obj)
+        error = "{0}: {1}".format(traceback_obj.exc_type.__name__, html.escape(str(traceback_obj)))
 
         return TEMPLATE.format(styles=STYLES, js=JS, error=error, exc_html=exc_html)
 
