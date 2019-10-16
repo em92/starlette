@@ -23,7 +23,7 @@ class Environ(MutableMapping):
     def __setitem__(self, key: typing.Any, value: typing.Any) -> None:
         if key in self._has_been_read:
             raise EnvironError(
-                "Attempting to set environ['%s'], but the value has already be read."
+                "Attempting to set environ['%s'], but the value has already been read."
                 % key
             )
         self._environ.__setitem__(key, value)
@@ -31,7 +31,7 @@ class Environ(MutableMapping):
     def __delitem__(self, key: typing.Any) -> None:
         if key in self._has_been_read:
             raise EnvironError(
-                "Attempting to delete environ['%s'], but the value has already be read."
+                "Attempting to delete environ['%s'], but the value has already been read."
                 % key
             )
         self._environ.__delitem__(key)

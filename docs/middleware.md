@@ -170,7 +170,7 @@ attribute on the instance if you do this.
 ```python
 class CustomHeaderMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, header_value='Example'):
-        self.app = app
+        super().__init__(app)
         self.header_value = header_value
 
     async def dispatch(self, request, call_next):
@@ -226,3 +226,11 @@ Access can be restricted to specific users or to members of specific GitHub orga
 #### [PrometheusMiddleware](https://github.com/perdy/starlette-prometheus)
 
 A middleware class for capturing Prometheus metrics related to requests and responses, including in progress requests, timing...
+
+#### [BugsnagMiddleware](https://github.com/ashinabraham/starlette-bugsnag)
+
+A middleware class for logging exceptions to [Bugsnag](https://www.bugsnag.com/).
+
+#### [EarlyDataMiddleware](https://github.com/HarrySky/starlette-early-data)
+
+Middleware and decorator for detecting and denying [TLSv1.3 early data](https://tools.ietf.org/html/rfc8470) requests.

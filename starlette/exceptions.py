@@ -15,6 +15,12 @@ class HTTPException(Exception):
         self.status_code = status_code
         self.detail = detail
 
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        return "{0}(status_code={1}, detail={2})".format(
+            class_name, repr(self.status_code), repr(self.detail)
+        )
+
 
 class ExceptionMiddleware:
     def __init__(self, app: ASGIApp, debug: bool = False) -> None:
