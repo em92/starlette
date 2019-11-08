@@ -84,7 +84,7 @@ PARAM_REGEX = re.compile("{([a-zA-Z_][a-zA-Z0-9_]*)(:[a-zA-Z_][a-zA-Z0-9_]*)?}")
 
 
 def compile_path(
-    path: str
+    path: str,
 ) -> typing.Tuple[typing.Pattern, str, typing.Dict[str, Convertor]]:
     """
     Given a path string, like: "/{username:str}", return a three-tuple
@@ -309,9 +309,11 @@ class Mount(BaseRoute):
                 matched_path = path[: -len(remaining_path)]
                 path_params = dict(scope.get("path_params", {}))
                 path_params.update(matched_params)
+                root_path = scope.get("root_path", "")
                 child_scope = {
                     "path_params": path_params,
-                    "root_path": scope.get("root_path", "") + matched_path,
+                    "app_root_path": scope.get("app_root_path", root_path),
+                    "root_path": root_path + matched_path,
                     "path": remaining_path,
                     "endpoint": self.app,
                 }
@@ -334,15 +336,18 @@ class Mount(BaseRoute):
             else:
                 # 'name' matches "<mount_name>:<child_name>".
                 remaining_name = name[len(self.name) + 1 :]
+            path_kwarg = path_params.get("path")
             path_params["path"] = ""
-            path, remaining_params = replace_params(
+            path_prefix, remaining_params = replace_params(
                 self.path_format, self.param_convertors, path_params
             )
+            if path_kwarg is not None:
+                remaining_params["path"] = path_kwarg
             for route in self.routes or []:
                 try:
                     url = route.url_path_for(remaining_name, **remaining_params)
                     return URLPath(
-                        path=path.rstrip("/") + str(url), protocol=url.protocol
+                        path=path_prefix.rstrip("/") + str(url), protocol=url.protocol
                     )
                 except NoMatchFound:
                     pass
@@ -425,10 +430,19 @@ class Host(BaseRoute):
 
 class Lifespan(BaseRoute):
     def __init__(
-        self, on_startup: typing.Callable = None, on_shutdown: typing.Callable = None
+        self,
+        on_startup: typing.Union[typing.Callable, typing.List[typing.Callable]] = None,
+        on_shutdown: typing.Union[typing.Callable, typing.List[typing.Callable]] = None,
     ):
-        self.startup_handlers = [] if on_startup is None else [on_startup]
-        self.shutdown_handlers = [] if on_shutdown is None else [on_shutdown]
+        self.startup_handlers = self.to_list(on_startup)
+        self.shutdown_handlers = self.to_list(on_shutdown)
+
+    def to_list(
+        self, item: typing.Union[typing.Callable, typing.List[typing.Callable]] = None
+    ) -> typing.List[typing.Callable]:
+        if item is None:
+            return []
+        return list(item) if isinstance(item, (list, tuple)) else [item]
 
     def matches(self, scope: Scope) -> typing.Tuple[Match, Scope]:
         if scope["type"] == "lifespan":
@@ -489,11 +503,13 @@ class Router:
         routes: typing.List[BaseRoute] = None,
         redirect_slashes: bool = True,
         default: ASGIApp = None,
+        on_startup: typing.List[typing.Callable] = None,
+        on_shutdown: typing.List[typing.Callable] = None,
     ) -> None:
         self.routes = [] if routes is None else list(routes)
         self.redirect_slashes = redirect_slashes
         self.default = self.not_found if default is None else default
-        self.lifespan = Lifespan()
+        self.lifespan = Lifespan(on_startup=on_startup, on_shutdown=on_shutdown)
 
     def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
         route = Mount(path, app=app, name=name)
@@ -599,9 +615,14 @@ class Router:
             return
 
         if scope["type"] == "http" and self.redirect_slashes:
-            if not scope["path"].endswith("/"):
+            if scope["path"].endswith("/"):
+                redirect_path = scope["path"].rstrip("/")
+            else:
+                redirect_path = scope["path"] + "/"
+
+            if redirect_path:  # Note that we skip the "/" -> "" case.
                 redirect_scope = dict(scope)
-                redirect_scope["path"] += "/"
+                redirect_scope["path"] = redirect_path
 
                 for route in self.routes:
                     match, child_scope = route.matches(redirect_scope)
