@@ -15,6 +15,11 @@ class Middleware:
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
-        options_repr = "" if not self.options else f", options={self.options!r}"
+        options_repr = "" if not self.options else ", options={}".format(repr(self.options))
         enabled_repr = "" if self.enabled else ", enabled=False"
-        return f"{class_name}({self.cls.__name__}{options_repr}{enabled_repr})"
+        return "{}({}{}{})".format(
+            class_name,
+            self.cls.__name__,
+            options_repr,
+            enabled_repr,
+        )
