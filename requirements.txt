@@ -19,7 +19,7 @@ pytest-cov
 # Documentation
 mkdocs
 mkdocs-material
-mkautodoc
+# mkautodoc # mkautodoc is not used in backport and 3.6+ only
 
 # Python 3.5 porting
 async_generator
