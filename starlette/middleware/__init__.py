@@ -12,10 +12,8 @@ class Middleware:
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
-        option_strings = ["{}={}".format(key, repr(value)) for key, value in self.options.items()]
+        option_strings = [
+            "{}={}".format(key, repr(value)) for key, value in self.options.items()
+        ]
         options_repr = ", ".join(option_strings)
-        return "{}({}{})".format(
-            class_name,
-            self.cls.__name__,
-            options_repr,
-        )
+        return "{}({}{})".format(class_name, self.cls.__name__, options_repr)
