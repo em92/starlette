@@ -19,6 +19,7 @@ pytest-cov
 # Documentation
 mkdocs
 mkdocs-material
+mkautodoc
 
 # Python 3.5 porting
 async_generator
