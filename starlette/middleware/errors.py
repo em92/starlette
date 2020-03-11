@@ -227,7 +227,8 @@ class ServerErrorMiddleware:
 
         # escape error class and text
         error = "{0}: {1}".format(
-            html.escape(traceback_obj.exc_type.__name__), html.escape(str(traceback_obj))
+            html.escape(traceback_obj.exc_type.__name__),
+            html.escape(str(traceback_obj)),
         )
 
         return TEMPLATE.format(styles=STYLES, js=JS, error=error, exc_html=exc_html)

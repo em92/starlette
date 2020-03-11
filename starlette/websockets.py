@@ -2,6 +2,8 @@ import enum
 import json
 import typing
 
+from async_generator import async_generator, yield_
+
 from starlette.requests import HTTPConnection
 from starlette.types import Message, Receive, Scope, Send
 
@@ -103,24 +105,27 @@ class WebSocket(HTTPConnection):
             text = message["bytes"].decode("utf-8")
         return json.loads(text)
 
-    async def iter_text(self) -> typing.AsyncIterator[str]:
+    @async_generator
+    async def iter_text(self):  # type: ignore
         try:
             while True:
-                yield await self.receive_text()
+                await yield_(await self.receive_text())
         except WebSocketDisconnect:
             pass
 
-    async def iter_bytes(self) -> typing.AsyncIterator[bytes]:
+    @async_generator
+    async def iter_bytes(self):  # type: ignore
         try:
             while True:
-                yield await self.receive_bytes()
+                await yield_(await self.receive_bytes())
         except WebSocketDisconnect:
             pass
 
-    async def iter_json(self) -> typing.AsyncIterator[typing.Any]:
+    @async_generator
+    async def iter_json(self):  # type: ignore
         try:
             while True:
-                yield await self.receive_json()
+                await yield_(await self.receive_json())
         except WebSocketDisconnect:
             pass
 
