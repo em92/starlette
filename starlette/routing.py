@@ -295,7 +295,7 @@ class Mount(BaseRoute):
         self,
         path: str,
         app: ASGIApp = None,
-        routes: typing.List[BaseRoute] = None,
+        routes: typing.Sequence[BaseRoute] = None,
         name: str = None,
     ) -> None:
         assert path == "" or path.startswith("/"), "Routed paths must start with '/'"
@@ -561,18 +561,20 @@ class Router:
             await partial.handle(scope, receive, send)
             return
 
-        if scope["type"] == "http" and self.redirect_slashes:
-            if not scope["path"].endswith("/"):
-                redirect_scope = dict(scope)
-                redirect_scope["path"] += "/"
+        if scope["type"] == "http" and self.redirect_slashes and scope["path"] != "/":
+            redirect_scope = dict(scope)
+            if scope["path"].endswith("/"):
+                redirect_scope["path"] = redirect_scope["path"].rstrip("/")
+            else:
+                redirect_scope["path"] = redirect_scope["path"] + "/"
 
-                for route in self.routes:
-                    match, child_scope = route.matches(redirect_scope)
-                    if match != Match.NONE:
-                        redirect_url = URL(scope=redirect_scope)
-                        response = RedirectResponse(url=str(redirect_url))
-                        await response(scope, receive, send)
-                        return
+            for route in self.routes:
+                match, child_scope = route.matches(redirect_scope)
+                if match != Match.NONE:
+                    redirect_url = URL(scope=redirect_scope)
+                    response = RedirectResponse(url=str(redirect_url))
+                    await response(scope, receive, send)
+                    return
 
         await self.default(scope, receive, send)
 
