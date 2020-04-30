@@ -37,7 +37,7 @@ def cookie_parser(cookie_string: str) -> typing.Dict[str, str]:
     Note: we are explicitly _NOT_ using `SimpleCookie.load` because it is based
     on an outdated spec and will fail on lots of input we want to support
     """
-    cookie_dict: typing.Dict[str, str] = {}
+    cookie_dict = {}
     for chunk in cookie_string.split(";"):
         if "=" in chunk:
             key, val = chunk.split("=", 1)
@@ -116,7 +116,7 @@ class HTTPConnection(Mapping):
     @property
     def cookies(self) -> typing.Dict[str, str]:
         if not hasattr(self, "_cookies"):
-            cookies: typing.Dict[str, str] = {}
+            cookies = {}
             cookie_header = self.headers.get("cookie")
 
             if cookie_header:
