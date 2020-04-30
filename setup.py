@@ -48,7 +48,7 @@ setup(
     install_requires=["async_generator"],
     packages=get_packages("starlette"),
     package_data={"starlette": ["py.typed"]},
-    data_files=[("", ["LICENSE.md"])],
+    include_package_data=True,
     extras_require={
         "full": [
             "aiofiles",
