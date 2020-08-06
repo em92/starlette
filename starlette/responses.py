@@ -43,11 +43,11 @@ class Response:
         media_type: str = None,
         background: BackgroundTask = None,
     ) -> None:
-        self.body = self.render(content)
         self.status_code = status_code
         if media_type is not None:
             self.media_type = media_type
         self.background = background
+        self.body = self.render(content)
         self.init_headers(headers)
 
     def render(self, content: typing.Any) -> bytes:
@@ -174,9 +174,15 @@ class UJSONResponse(JSONResponse):
 
 class RedirectResponse(Response):
     def __init__(
-        self, url: typing.Union[str, URL], status_code: int = 307, headers: dict = None
+        self,
+        url: typing.Union[str, URL],
+        status_code: int = 307,
+        headers: dict = None,
+        background: BackgroundTask = None,
     ) -> None:
-        super().__init__(content=b"", status_code=status_code, headers=headers)
+        super().__init__(
+            content=b"", status_code=status_code, headers=headers, background=background
+        )
         self.headers["location"] = quote_plus(str(url), safe=":/%#?&=@[]!$&'()*+,;")
 
 
@@ -297,7 +303,7 @@ class FileResponse(Response):
             }
         )
         if self.send_header_only:
-            await send({"type": "http.response.body"})
+            await send({"type": "http.response.body", "body": b"", "more_body": False})
         else:
             async with aiofiles.open(self.path, mode="rb") as file:
                 more_body = True

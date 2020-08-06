@@ -1,6 +1,8 @@
 import io
 from collections import OrderedDict
 
+import pytest
+
 from starlette.datastructures import (
     URL,
     CommaSeparatedStrings,
@@ -9,6 +11,7 @@ from starlette.datastructures import (
     MultiDict,
     MutableHeaders,
     QueryParams,
+    UploadFile,
 )
 
 
@@ -218,6 +221,20 @@ def test_queryparams():
 
     q = QueryParams([("a", "123"), ("a", "456")])
     assert QueryParams(q) == q
+
+
+class TestUploadFile(UploadFile):
+    spool_max_size = 1024
+
+
+@pytest.mark.asyncio
+async def test_upload_file():
+    big_file = TestUploadFile("big-file")
+    await big_file.write(b"big-data" * 512)
+    await big_file.write(b"big-data")
+    await big_file.seek(0)
+    assert await big_file.read(1024) == b"big-data" * 128
+    await big_file.close()
 
 
 def test_formdata():
