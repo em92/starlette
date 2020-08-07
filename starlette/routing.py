@@ -455,7 +455,7 @@ class Router:
         default: ASGIApp = None,
         on_startup: typing.Sequence[typing.Callable] = None,
         on_shutdown: typing.Sequence[typing.Callable] = None,
-        lifespan: typing.Callable[[typing.Any], typing.AsyncGenerator] = None,
+        lifespan: typing.Callable[[typing.Any], typing.Any] = None,
     ) -> None:
         self.routes = [] if routes is None else list(routes)
         self.redirect_slashes = redirect_slashes
