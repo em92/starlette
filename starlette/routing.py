@@ -5,6 +5,8 @@ import traceback
 import typing
 from enum import Enum
 
+from async_generator import async_generator, isasyncgenfunction, yield_
+
 from starlette.concurrency import run_in_threadpool
 from starlette.convertors import CONVERTOR_TYPES, Convertor
 from starlette.datastructures import URL, Headers, URLPath
@@ -463,9 +465,10 @@ class Router:
         self.on_startup = [] if on_startup is None else list(on_startup)
         self.on_shutdown = [] if on_shutdown is None else list(on_shutdown)
 
-        async def default_lifespan(app: typing.Any) -> typing.AsyncGenerator:
+        @async_generator
+        async def default_lifespan(app: typing.Any):  # type: ignore
             await self.startup()
-            yield
+            await yield_()
             await self.shutdown()
 
         self.lifespan_context = default_lifespan if lifespan is None else lifespan
@@ -522,7 +525,7 @@ class Router:
         app = scope.get("app")
         message = await receive()
         try:
-            if inspect.isasyncgenfunction(self.lifespan_context):
+            if isasyncgenfunction(self.lifespan_context):
                 async for item in self.lifespan_context(app):
                     assert first, "Lifespan context yielded multiple times."
                     first = False

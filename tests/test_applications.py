@@ -1,5 +1,7 @@
 import os
 
+from async_generator import async_generator, yield_
+
 from starlette.applications import Starlette
 from starlette.endpoints import HTTPEndpoint
 from starlette.exceptions import HTTPException
@@ -286,10 +288,11 @@ def test_app_async_lifespan():
     startup_complete = False
     cleanup_complete = False
 
+    @async_generator
     async def lifespan(app):
         nonlocal startup_complete, cleanup_complete
         startup_complete = True
-        yield
+        await yield_()
         cleanup_complete = True
 
     app = Starlette(lifespan=lifespan)
