@@ -11,7 +11,7 @@ ujson
 # Testing
 autoflake
 git+https://github.com/em92/databases.git#egg=project[sqlite]
-isort==5.*
+isort<5.0
 mypy
 pytest
 pytest-cov
