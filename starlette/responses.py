@@ -3,9 +3,10 @@ import http.cookies
 import json
 import os
 import stat
+import sys
 import typing
 from email.utils import formatdate
-from mimetypes import guess_type
+from mimetypes import guess_type as mimetypes_guess_type
 from urllib.parse import quote, quote_plus
 
 from async_generator import isasyncgen
@@ -29,6 +30,15 @@ try:
     import ujson
 except ImportError:  # pragma: nocover
     ujson = None  # type: ignore
+
+
+# Compatibility wrapper for `mimetypes.guess_type` to support `os.PathLike` on <py3.8
+def guess_type(
+    url: typing.Union[str, "os.PathLike[str]"], strict: bool = True
+) -> typing.Tuple[typing.Optional[str], typing.Optional[str]]:
+    if sys.version_info < (3, 8):  # pragma: no cover
+        url = os.fspath(url)
+    return mimetypes_guess_type(url, strict)
 
 
 class Response:
@@ -240,7 +250,7 @@ class FileResponse(Response):
 
     def __init__(
         self,
-        path: str,
+        path: typing.Union[str, "os.PathLike[str]"],
         status_code: int = 200,
         headers: dict = None,
         media_type: str = None,

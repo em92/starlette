@@ -15,6 +15,8 @@ from starlette.responses import (
 )
 from starlette.types import Receive, Scope, Send
 
+PathLike = typing.Union[str, "os.PathLike[str]"]
+
 
 class NotModifiedResponse(Response):
     NOT_MODIFIED_HEADERS = (
@@ -41,7 +43,7 @@ class StaticFiles:
     def __init__(
         self,
         *,
-        directory: str = None,
+        directory: PathLike = None,
         packages: typing.List[str] = None,
         html: bool = False,
         check_dir: bool = True
@@ -55,8 +57,8 @@ class StaticFiles:
             raise RuntimeError("Directory '{}' does not exist".format(directory))
 
     def get_directories(
-        self, directory: str = None, packages: typing.List[str] = None
-    ) -> typing.List[str]:
+        self, directory: PathLike = None, packages: typing.List[str] = None
+    ) -> typing.List[PathLike]:
         """
         Given `directory` and `packages` arguments, return a list of all the
         directories that should be used for serving static files from.
@@ -75,13 +77,15 @@ class StaticFiles:
             ), "Directory 'statics' in package {} could not be found.".format(
                 repr(package)
             )
-            directory = os.path.normpath(os.path.join(spec.origin, "..", "statics"))
+            package_directory = os.path.normpath(
+                os.path.join(spec.origin, "..", "statics")
+            )
             assert os.path.isdir(
-                directory
+                package_directory
             ), "Directory 'statics' in package {} could not be found.".format(
                 repr(package)
             )
-            directories.append(directory)
+            directories.append(package_directory)
 
         return directories
 
@@ -160,7 +164,7 @@ class StaticFiles:
 
     def file_response(
         self,
-        full_path: str,
+        full_path: PathLike,
         stat_result: os.stat_result,
         scope: Scope,
         status_code: int = 200,
