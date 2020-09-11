@@ -15,8 +15,6 @@ from starlette.responses import (
 )
 from starlette.types import Receive, Scope, Send
 
-PathLike = typing.Union[str, "os.PathLike[str]"]
-
 
 class NotModifiedResponse(Response):
     NOT_MODIFIED_HEADERS = (
@@ -43,7 +41,7 @@ class StaticFiles:
     def __init__(
         self,
         *,
-        directory: PathLike = None,
+        directory: str = None,
         packages: typing.List[str] = None,
         html: bool = False,
         check_dir: bool = True
@@ -57,8 +55,8 @@ class StaticFiles:
             raise RuntimeError("Directory '{}' does not exist".format(directory))
 
     def get_directories(
-        self, directory: PathLike = None, packages: typing.List[str] = None
-    ) -> typing.List[PathLike]:
+        self, directory: str = None, packages: typing.List[str] = None
+    ) -> typing.List[str]:
         """
         Given `directory` and `packages` arguments, return a list of all the
         directories that should be used for serving static files from.
@@ -164,7 +162,7 @@ class StaticFiles:
 
     def file_response(
         self,
-        full_path: PathLike,
+        full_path: str,
         stat_result: os.stat_result,
         scope: Scope,
         status_code: int = 200,
